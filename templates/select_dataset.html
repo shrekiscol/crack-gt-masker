@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Crack GT Masker · Datasets</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body class="page-select">
+  <main class="select-wrap">
+    <h1>Crack GT Masker</h1>
+    <p class="muted">Pick a dataset to label, or create a new one. Datasets live in <code>datasets/&lt;name&gt;/images</code> and masks are saved to <code>datasets/&lt;name&gt;/labels</code>.</p>
+
+    <section class="card">
+      <h2>Datasets</h2>
+      {% if datasets %}
+      <ul class="dataset-list">
+        {% for d in datasets %}
+        <li>
+          <a href="{{ url_for('masking', dataset=d.name) }}">
+            <span class="ds-name">{{ d.name }}</span>
+            <span class="ds-count">{{ d.labeled }} / {{ d.images }} labeled</span>
+            <span class="ds-bar"><span style="width: {{ (100 * d.labeled / d.images) if d.images else 0 }}%"></span></span>
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="muted">No datasets yet. Create one below.</p>
+      {% endif %}
+    </section>
+
+    <section class="card">
+      <h2>New dataset</h2>
+      <form id="createForm" class="create-row">
+        <input id="newName" type="text" placeholder="e.g. concrete_batch_01" autocomplete="off" required>
+        <button class="primary" type="submit">Create</button>
+      </form>
+      <div id="createError" class="error"></div>
+    </section>
+  </main>
+
+  <script>
+    document.getElementById('createForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const name = document.getElementById('newName').value;
+      const res = await fetch('/datasets', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }),
+      });
+      const data = await res.json();
+      if (!res.ok) { document.getElementById('createError').textContent = data.message; return; }
+      location.href = '/masking?dataset=' + encodeURIComponent(data.name);
+    });
+  </script>
+</body>
+</html>
